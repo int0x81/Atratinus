@@ -17,7 +17,6 @@ namespace Atratinus.DataTransform
                 report.InvalidAccessionNumber = true;
                 report.Quality = QualityLevel.T_TIER;
                 investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
-                return report;
             }
 
             if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
@@ -31,6 +30,9 @@ namespace Atratinus.DataTransform
                 badStates++;
                 report.InvalidFilingDate = true;
             }
+
+            if (report.Quality == QualityLevel.T_TIER)
+                return report;
                 
 
             QualityLevel quality;
