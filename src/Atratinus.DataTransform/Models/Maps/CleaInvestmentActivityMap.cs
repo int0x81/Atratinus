@@ -30,6 +30,7 @@ namespace Atratinus.DataTransform.Models.Maps
             Map(a => a.SubjectCompanySIC).Name("SUBJECT_COMPANY_SIC");
             Map(a => a.SubjectCompanyStateOfIncorporation).Name("SUBJECT_COMPANY_STATE_OF_INCORPORATION");
             Map(a => a.SubmissionType).Name("SUBMISSION_TYPE");
+            Map(a => a.TypeOfReportingPerson).Name("TYPE_OF_REPORTING_PERSON");
         }
     }
 }

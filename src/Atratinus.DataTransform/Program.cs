@@ -123,8 +123,6 @@ namespace Atratinus.DataTransform
             Helper.MergeAccession(investmentActivity, originalAccessions);
             AddFundAndFirmType(investmentActivity, investors);
 
-            QualityGate.Measure(investmentActivity);
-
             Supervised trainingDatum = null;
 
             if (supervised.TryGetValue(investmentActivity.AccessionNumber, out var typeId))

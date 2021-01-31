@@ -12,13 +12,21 @@ namespace Atratinus.DataTransform
             var report = new QualityReport();
             ushort badStates = 0;
 
+            if(!IsAccesionNumberCorrect(investment.AccessionNumber))
+            {
+                report.InvalidAccessionNumber = true;
+                report.Quality = QualityLevel.T_TIER;
+                investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
+                return report;
+            }
+
             if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
             {
                 badStates++;
                 report.InvalidPurposeOfTransaction = true;
             }   
 
-            if (!IsFillingDateCorrect(investment.FilingDate))
+            if (!IsFilingDateCorrect(investment.FilingDate))
             {
                 badStates++;
                 report.InvalidFilingDate = true;
@@ -43,9 +51,14 @@ namespace Atratinus.DataTransform
                         quality = QualityLevel.B_TIER;
                         break;
                     }
-                default:
+                case 3:
                     {
                         quality = QualityLevel.C_TIER;
+                        break;
+                    }
+                default:
+                    {
+                        quality = QualityLevel.T_TIER;
                         break;
                     }
             }
@@ -55,12 +68,18 @@ namespace Atratinus.DataTransform
             return report;
         }
 
+        private static bool IsAccesionNumberCorrect(string accessionNumber)
+        {
+            string pattern = @"^[0-9]{10}-[0-9]{2}-[0-9]{6}$";
+            return !string.IsNullOrEmpty(accessionNumber) && Regex.IsMatch(accessionNumber, pattern);
+        }
+
         static bool IsPurposeOfTransactionCorrect(string purpose)
         {
             return !string.IsNullOrEmpty(purpose);
         }
 
-        static bool IsFillingDateCorrect(string filingDate)
+        static bool IsFilingDateCorrect(string filingDate)
         {
             string pattern = "^[0-9]{8}$";
             return !string.IsNullOrEmpty(filingDate) && Regex.IsMatch(filingDate, pattern);
