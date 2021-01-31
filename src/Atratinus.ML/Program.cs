@@ -11,9 +11,8 @@ namespace Atratinus.ML
 {
     class Program
     {
-        private static string _appPath => Path.GetDirectoryName(Environment.GetCommandLineArgs()[0]);
-        private static string _testDataPath => Path.Combine(_appPath, "..", "..", "..", "Data", "issues_test.tsv");
-        private static string _modelPath => Path.Combine(_appPath, "..", "..", "..", "Models", "model.zip");
+        private static string _testDataPath = "";
+        private static string _modelPath = "";
 
         private static MLContext _mlContext;
         private static PredictionEngine<Supervised, PurposePrediction> _predEngine;
@@ -31,7 +30,7 @@ namespace Atratinus.ML
 
             Evaluate();
 
-            _mlContext.Model.Save(_trainedModel, trainingDataView.Schema, Constants.ML_MODEL_PATH);
+            _mlContext.Model.Save(_trainedModel, trainingDataView.Schema, _modelPath);
         }
 
         private static IDataView LoadData(string filePath)
@@ -72,7 +71,7 @@ namespace Atratinus.ML
             Console.WriteLine($"=============== Evaluating to get model's accuracy metrics - Starting time: {DateTime.Now} ===============");
 
             //Load the test dataset into the IDataView
-            var testDataView = LoadData(Constants.TEST_DATA_FILE_PATH);
+            var testDataView = LoadData(_testDataPath);
 
             //Evaluate the model on a test dataset and calculate metrics of the model on the test data.
             var testMetrics = _mlContext.MulticlassClassification.Evaluate(_trainedModel.Transform(testDataView));

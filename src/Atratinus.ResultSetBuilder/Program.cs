@@ -19,7 +19,7 @@ namespace Atratinus.ResultSetBuilder
         static void Main()
         {
             // 1. Read in accessions
-            IList<InvestmentActivity> accessions = Helper.ReadInAccessions(Constants.INVESTMENT_ACTIVITIES_FOLDER_PATH);
+            IList<InvestmentActivity> accessions = Helper.ReadInAccessions("");
 
             CreatePredictionEngine(); //Only needed for local ml model prediction
 
@@ -36,7 +36,7 @@ namespace Atratinus.ResultSetBuilder
             }
 
             // 3. Save result as CSV
-            Helper.SaveAccessionsAsCSV(accessions, false);
+            Helper.SaveAccessionsAsCSV(accessions, "", false);
         }
 
         private static string GetPurposeOfInterventionType(int purposeOfInterventionTypeId)
@@ -51,7 +51,7 @@ namespace Atratinus.ResultSetBuilder
 
         private static void CreatePredictionEngine()
         {
-            ITransformer loadedModel = mlContext.Model.Load(Constants.ML_MODEL_PATH, out var modelInputSchema);
+            ITransformer loadedModel = mlContext.Model.Load("", out var modelInputSchema);
 
             predictionEngine = mlContext.Model.CreatePredictionEngine<Supervised, PurposePrediction>(loadedModel);
         }
