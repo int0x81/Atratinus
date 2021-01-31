@@ -24,7 +24,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: dotnet publish src/Atratinus.DataTransform/Atratinus.DataTransform.csproj -r "win-x64" -c Release -p:PublishSingleFile=true
+      run: dotnet publish src/Atratinus.DataTransform/Atratinus.DataTransform.csproj -r "win-x64" -c Release -p:PublishSingleFile=true -p:DebugType=None
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v2.2.2
       with:
