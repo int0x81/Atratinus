@@ -19,54 +19,51 @@ namespace Atratinus.DataTransform
                 investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
             }
 
-            if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
-            {
-                badStates++;
-                report.InvalidPurposeOfTransaction = true;
-            }   
-
             if (!IsFilingDateCorrect(investment.FilingDate))
             {
-                badStates++;
                 report.InvalidFilingDate = true;
+                report.Quality = QualityLevel.T_TIER;
+                investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
             }
 
             if (report.Quality == QualityLevel.T_TIER)
                 return report;
-                
 
-            QualityLevel quality;
+            if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
+            {
+                badStates++;
+                report.InvalidPurposeOfTransaction = true;
+            }
+                
             switch (badStates)
             {
                 case 0:
                     {
-                        quality = QualityLevel.S_TIER;
+                        investment.DataQualityLevel = QualityLevel.S_TIER.ToString();
                         break;
                     }
                 case 1:
                     {
-                        quality = QualityLevel.A_TIER;
+                        investment.DataQualityLevel = QualityLevel.A_TIER.ToString();
                         break;
                     }
                 case 2:
                     {
-                        quality = QualityLevel.B_TIER;
+                        investment.DataQualityLevel = QualityLevel.B_TIER.ToString();
                         break;
                     }
                 case 3:
                     {
-                        quality = QualityLevel.C_TIER;
+                        investment.DataQualityLevel = QualityLevel.C_TIER.ToString();
                         break;
                     }
                 default:
                     {
-                        quality = QualityLevel.T_TIER;
+                        investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
                         break;
                     }
             }
 
-            investment.DataQualityLevel = quality.ToString();
-            report.Quality = quality;
             return report;
         }
 

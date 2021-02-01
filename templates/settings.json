@@ -4,5 +4,6 @@
     "InvestorsFile": "C:\\path\\to\\file.csv", //The path to the csv file that was taken from EIKON and contains the investors
     "SupervisedFile": "C:\\path\\to\\file.json", //The path to the json file that contains the classified investment activities.
     "OutputFolder": "C:\\path\\to\\output\\folder", //The output folder to which the programm will publish its results to.
-    "SaveInvestmentActivitiesAsJSON": false //States if each resolved EDGAR file should be stored as json file
+    "SaveInvestmentActivitiesAsJSON": false, //States if each resolved EDGAR file should be stored as json file
+    "OnlyTakeActivistInvestors": true //States if data before 1998-02-17 should ignored
 }

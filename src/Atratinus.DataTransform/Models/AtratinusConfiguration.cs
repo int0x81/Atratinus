@@ -8,5 +8,6 @@
         public string SupervisedFile { get; init; }
         public string OutputFolder { get; init; }
         public bool SaveInvestmentActivitiesAsJSON { get; init; }
+        public bool OnlyTakeActivistInvestors { get; init; }
     }
 }

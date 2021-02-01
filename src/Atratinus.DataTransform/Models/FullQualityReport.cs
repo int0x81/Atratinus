@@ -62,6 +62,8 @@ namespace Atratinus.DataTransform.Models
             string report = "";
             report += $"Quality report {DateTime.Now}";
             report += Environment.NewLine;
+            report += $"Analyzed {amountEDGARFiles} EDGAR files";
+            report += Environment.NewLine;
             report += "------------------------------------";
             report += Environment.NewLine;
             report += $"S-TIER data: {amountSTier} ({GetFormattedPercentageString(amountSTier, amountEDGARFiles)}%)";

@@ -1,5 +1,6 @@
 ﻿using Atratinus.Core;
 using Atratinus.Core.Models;
+using Atratinus.DataTransform.Enums;
 using Atratinus.DataTransform.Models;
 using Serilog;
 using System;
@@ -54,16 +55,15 @@ namespace Atratinus.DataTransform
                 var limit = c * sliceRange;
                 var taskNumber = c;
 
-                tasks[c] = Task.Run(() => AnalyzeSliceOfFiles(start, limit, files, cleasSet, supervised, investors));
+                tasks[c] = Task.Run(() => AnalyzeSliceOfFiles(start, limit, files, cleasSet, supervised, investors, config));
             }
 
-            tasks[0] = Task.Run(() => AnalyzeSliceOfFiles((tasks.Length - 1) * sliceRange, files.Length, files, cleasSet, supervised, investors));
+            tasks[0] = Task.Run(() => AnalyzeSliceOfFiles((tasks.Length - 1) * sliceRange, files.Length, files, cleasSet, supervised, investors, config));
 
-            FinalizeRun(tasks, config);
+            FinalizeRun(tasks, config, Convert.ToUInt32(files.Length));
 
             Log.Information($"Finished data tranformation: {DateTime.Now}");
             Log.Information($"You may close this window now...");
-            Console.ReadKey();
         }
 
         private static void ConfigureSerilog()
@@ -95,7 +95,7 @@ namespace Atratinus.DataTransform
         }
 
         private static FileAnalysisBatchResult AnalyzeSliceOfFiles(int start, int limit, string[] files, IReadOnlyDictionary<string, InvestmentActivity> originAccessions, 
-            IReadOnlyDictionary<string, int> supervised, InvestorHashTableSet investors)
+            IReadOnlyDictionary<string, int> supervised, InvestorHashTableSet investors, AtratinusConfiguration config)
         {
             IList<InvestmentActivity> investments = new List<InvestmentActivity>();
             IList<Supervised> trainingData = new List<Supervised>();
@@ -104,26 +104,29 @@ namespace Atratinus.DataTransform
             for (int fileIndex = start; fileIndex < limit; fileIndex++)
             {
                 var analysis = AnalyzeFile(files[fileIndex], originAccessions, supervised, investors);
+                var fileReport = QualityGate.Measure(analysis.Investment);
+                report.ConsiderQualityReport(files[fileIndex], fileReport);
+
+                if (!TakeInvestment(analysis.Investment, config))
+                    continue;
 
                 if (analysis.Supervised != null)
                     trainingData.Add(analysis.Supervised);
 
                 investments.Add(analysis.Investment);
-                var fileReport = QualityGate.Measure(analysis.Investment);
-                report.ConsiderQualityReport(files[fileIndex], fileReport);
             }
 
             return new FileAnalysisBatchResult() { Accessions = investments, TrainingData = trainingData, QualityReport = report };
         }
 
-        private static FileAnalysisResult AnalyzeFile(string file, IReadOnlyDictionary<string, InvestmentActivity> originalAccessions, 
+        private static FileAnalysisResult AnalyzeFile(string file, IReadOnlyDictionary<string, InvestmentActivity> cleaInvestmentSet, 
             IReadOnlyDictionary<string, int> supervised, InvestorHashTableSet investors)
         {
             InvestmentActivity investmentActivity = EdgarAnalyzer.Analyze(file);
-            Helper.MergeAccession(investmentActivity, originalAccessions);
-            AddFundAndFirmType(investmentActivity, investors);
-
             Supervised trainingDatum = null;
+            Helper.MergeAccession(investmentActivity, cleaInvestmentSet);
+
+            AddFundAndFirmType(investmentActivity, investors);
 
             if (supervised.TryGetValue(investmentActivity.AccessionNumber, out var typeId))
             {
@@ -135,6 +138,23 @@ namespace Atratinus.DataTransform
             return new FileAnalysisResult() { Investment = investmentActivity, Supervised = trainingDatum };
         }
 
+        private static bool TakeInvestment(InvestmentActivity investment, AtratinusConfiguration config)
+        {
+            if (investment.DataQualityLevel == QualityLevel.T_TIER.ToString())
+                return false;
+
+            if(config.OnlyTakeActivistInvestors)
+            {
+                var year = Convert.ToInt32(investment.FilingDate.Substring(0, 4));
+                var month = Convert.ToInt32(investment.FilingDate.Substring(4, 2));
+                var day = Convert.ToInt32(investment.FilingDate.Substring(6, 2));
+
+                if (new DateTime(year, month, day) < new DateTime(1998, 2, 17))
+                    return false;
+            }
+
+            return true;
+        }
         private static void AddFundAndFirmType(InvestmentActivity accession, InvestorHashTableSet investors)
         {
             if (string.IsNullOrEmpty(accession.ActivistInvestorName))
@@ -178,7 +198,7 @@ namespace Atratinus.DataTransform
             return files;
         }
 
-        private static void FinalizeRun(Task<FileAnalysisBatchResult>[] tasks, AtratinusConfiguration config)
+        private static void FinalizeRun(Task<FileAnalysisBatchResult>[] tasks, AtratinusConfiguration config, uint amountFiles)
         {
             Task.WaitAll(tasks);
 
@@ -195,7 +215,7 @@ namespace Atratinus.DataTransform
 
             Helper.SaveAccessionsAsCSV(investments, config.OutputFolder, false);
             SaveTrainingData(trainingData, config.OutputFolder);
-            report.BuildAndSaveReport(config.OutputFolder, Convert.ToUInt32(investments.Count));
+            report.BuildAndSaveReport(config.OutputFolder, amountFiles);
         }
 
         private static void SaveTrainingData(IList<Supervised> trainingData, string folderPath)
