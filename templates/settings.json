@@ -1,0 +1,8 @@
+{
+    "EDGARFolder": "C:\\path\\to\\folder", //The path to the folder where the ~53000 EDGAR files are stored
+    "CleaInvestmentActivitySet": "C:\\path\\to\\file.csv", //The path to the csv file that is the ouput of the Alteryx programm
+    "InvestorsFile": "C:\\path\\to\\file.csv", //The path to the csv file that was taken from EIKON and contains the investors
+    "SupervisedFile": "C:\\path\\to\\file.json", //The path to the json file that contains the classified investment activities.
+    "OutputFolder": "C:\\path\\to\\output\\folder", //The output folder to which the programm will publish its results to.
+    "SaveInvestmentActivitiesAsJSON": false //States if each resolved EDGAR file should be stored as json file
+}
