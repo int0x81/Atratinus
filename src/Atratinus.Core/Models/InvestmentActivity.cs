@@ -1,4 +1,6 @@
-﻿namespace Atratinus.Core.Models
+﻿using Atratinus.Core.Enums;
+
+namespace Atratinus.Core.Models
 {
     public class InvestmentActivity
     {
@@ -44,7 +46,7 @@
 
         public string SubjectCompanyStateOfIncorporation { get; set; }
 
-        public string SubmissionType { get; set; }
+        public SubmissionType? SubmissionType { get; set; }
 
         public string Source { get; set; }
 

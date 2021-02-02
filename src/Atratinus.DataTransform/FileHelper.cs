@@ -4,6 +4,7 @@ using Atratinus.DataTransform.Models.Maps;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -17,6 +18,25 @@ namespace Atratinus.DataTransform
     /// </summary>
     static class FileHelper
     {
+        internal static string[] EnumerateEDGARFiles(string path)
+        {
+            string[] files;
+            try
+            {
+                files = Directory.GetFiles(path, "*.txt");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Unable access EDGAR files in {path}. Error message: {ex.Message}");
+                return Array.Empty<string>();
+            }
+
+            if (files.Length == 0)
+                Log.Warning($"Couldn't find any txt files under {path}");
+
+            return files;
+        }
+
         /// <summary>
         /// Reads in the investment activities that was provides by Clea as csv file.
         /// </summary>
@@ -119,5 +139,14 @@ namespace Atratinus.DataTransform
 
             return dictionary;
         }
+
+        internal static void SaveTrainingData(IList<Supervised> trainingData, string folderPath)
+        {
+            string json = JsonSerializer.Serialize(trainingData);
+
+            string path = Path.Combine(folderPath, "trainingData.json");
+
+            File.WriteAllText(path, json);
+        } 
     }
 }

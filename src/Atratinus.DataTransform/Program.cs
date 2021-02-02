@@ -1,4 +1,5 @@
 ﻿using Atratinus.Core;
+using Atratinus.Core.Enums;
 using Atratinus.Core.Models;
 using Atratinus.DataTransform.Enums;
 using Atratinus.DataTransform.Models;
@@ -25,7 +26,7 @@ namespace Atratinus.DataTransform
             if (!Directory.Exists(config.OutputFolder))
                 Directory.CreateDirectory(config.OutputFolder);
 
-            var files = EnumerateFiles(config.EDGARFolder);
+            var files = FileHelper.EnumerateEDGARFiles(config.EDGARFolder);
             var amountVirtualCores = Environment.ProcessorCount;
             var tasks = new Task<FileAnalysisBatchResult>[amountVirtualCores];
             int sliceRange;
@@ -48,7 +49,6 @@ namespace Atratinus.DataTransform
             Log.Information($"Utilizing {tasks.Length} threads for file analysis");
             Log.Information($"Starting data tranformation: {DateTime.Now}");
             
-
             for (int c = 1; c < tasks.Length; c++) //Starting at 1; the 0-nth thread will do the modulos
             { 
                 var start = (c - 1) * sliceRange;
@@ -84,7 +84,8 @@ namespace Atratinus.DataTransform
             }
             catch (JsonException)
             {
-                Log.Error("Unable to load settings. The settings.json file was not in JSON format.");
+                Log.Error("Unable to load settings. The settings.json file was not in JSON format. " +
+                    "If you are using the template, make sure the comments are removed since comments are not allowed in JSON.");
                 return null;
             }
             catch (FileNotFoundException)
@@ -107,7 +108,7 @@ namespace Atratinus.DataTransform
                 var fileReport = QualityGate.Measure(analysis.Investment);
                 report.ConsiderQualityReport(files[fileIndex], fileReport);
 
-                if (!TakeInvestment(analysis.Investment, config))
+                if (!TakeInvestment(fileReport, config))
                     continue;
 
                 if (analysis.Supervised != null)
@@ -138,23 +139,20 @@ namespace Atratinus.DataTransform
             return new FileAnalysisResult() { Investment = investmentActivity, Supervised = trainingDatum };
         }
 
-        private static bool TakeInvestment(InvestmentActivity investment, AtratinusConfiguration config)
+        private static bool TakeInvestment(QualityReport report, AtratinusConfiguration config)
         {
-            if (investment.DataQualityLevel == QualityLevel.T_TIER.ToString())
+            if (!config.TakeFilesBeforeSECReform && !report.SubmittedAfterSECReform)
                 return false;
 
-            if(config.OnlyTakeActivistInvestors)
-            {
-                var year = Convert.ToInt32(investment.FilingDate.Substring(0, 4));
-                var month = Convert.ToInt32(investment.FilingDate.Substring(4, 2));
-                var day = Convert.ToInt32(investment.FilingDate.Substring(6, 2));
+            if (report.Quality == QualityLevel.T_TIER)
+                return false;
 
-                if (new DateTime(year, month, day) < new DateTime(1998, 2, 17))
-                    return false;
-            }
+            if (!report.UsefulSubmissionType)
+                return false;
 
             return true;
         }
+        
         private static void AddFundAndFirmType(InvestmentActivity accession, InvestorHashTableSet investors)
         {
             if (string.IsNullOrEmpty(accession.ActivistInvestorName))
@@ -179,25 +177,6 @@ namespace Atratinus.DataTransform
             }
         }
 
-        private static string[] EnumerateFiles(string path)
-        {
-            string[] files;
-            try
-            {
-                files = Directory.GetFiles(path, "*.txt");
-            }
-            catch(Exception ex)
-            {
-                Log.Error($"Unable access EDGAR files in {path}. Error message: {ex.Message}");
-                return Array.Empty<string>();
-            }
-
-            if(files.Length == 0)
-                Log.Warning($"Couldn't find any txt files under {path}");
-
-            return files;
-        }
-
         private static void FinalizeRun(Task<FileAnalysisBatchResult>[] tasks, AtratinusConfiguration config, uint amountFiles)
         {
             Task.WaitAll(tasks);
@@ -214,17 +193,8 @@ namespace Atratinus.DataTransform
             }
 
             Helper.SaveAccessionsAsCSV(investments, config.OutputFolder, false);
-            SaveTrainingData(trainingData, config.OutputFolder);
+            FileHelper.SaveTrainingData(trainingData, config.OutputFolder);
             report.BuildAndSaveReport(config.OutputFolder, amountFiles);
-        }
-
-        private static void SaveTrainingData(IList<Supervised> trainingData, string folderPath)
-        {
-            string json = JsonSerializer.Serialize(trainingData);
-
-            string path = Path.Combine(folderPath, "trainingData.json");
-
-            File.WriteAllText(path, json);
         }
     }
 }

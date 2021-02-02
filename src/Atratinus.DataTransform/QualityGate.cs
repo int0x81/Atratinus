@@ -2,6 +2,7 @@
 using Atratinus.DataTransform.Enums;
 using System.Text.RegularExpressions;
 using Atratinus.DataTransform.Models;
+using System;
 
 namespace Atratinus.DataTransform
 {
@@ -21,20 +22,46 @@ namespace Atratinus.DataTransform
 
             if (!IsFilingDateCorrect(investment.FilingDate))
             {
+                badStates++;
                 report.InvalidFilingDate = true;
-                report.Quality = QualityLevel.T_TIER;
-                investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
             }
+            else
+            {
+                var year = Convert.ToInt32(investment.FilingDate.Substring(0, 4));
+                var month = Convert.ToInt32(investment.FilingDate.Substring(4, 2));
+                var day = Convert.ToInt32(investment.FilingDate.Substring(6, 2));
 
-            if (report.Quality == QualityLevel.T_TIER)
-                return report;
+                if (new DateTime(year, month, day) < new DateTime(1998, 2, 17))
+                    report.SubmittedAfterSECReform = false;
+                else
+                    report.SubmittedAfterSECReform = true;
+            }
 
             if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
             {
                 badStates++;
                 report.InvalidPurposeOfTransaction = true;
             }
-                
+
+            if(!investment.SubmissionType.HasValue)
+            {
+                badStates++;
+                report.InvalidSubmissionType = true;
+                report.UsefulSubmissionType = false;
+            }
+            else
+            {
+                report.InvalidSubmissionType = false;
+
+                if (investment.SubmissionType.Value == Core.Enums.SubmissionType.SC_13D)
+                    report.UsefulSubmissionType = true;
+                else
+                    report.UsefulSubmissionType = false;
+            }
+
+            if (report.Quality == QualityLevel.T_TIER)
+                return report;
+
             switch (badStates)
             {
                 case 0:

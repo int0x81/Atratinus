@@ -14,6 +14,11 @@ namespace Atratinus.DataTransform.Models
 
         readonly List<string> filesWithInvalidFilingDate = new List<string>();
 
+        readonly List<string> filesWithInvalidSubmissionType = new List<string>();
+
+        uint dataWithUsefulSubmissionType = 0;
+        uint dataSubmittedAfterSECReform = 0;
+
         int amountSTier = 0;
 
         int amountATier = 0;
@@ -26,8 +31,13 @@ namespace Atratinus.DataTransform.Models
 
         internal void Merge(FullQualityReport report)
         {
+            filesWithInvalidAccessionNumber.AddRange(report.filesWithInvalidAccessionNumber);
             filesWithInvalidPurposeOfTransaction.AddRange(report.filesWithInvalidPurposeOfTransaction);
             filesWithInvalidFilingDate.AddRange(report.filesWithInvalidFilingDate);
+            filesWithInvalidSubmissionType.AddRange(report.filesWithInvalidAccessionNumber);
+
+            dataWithUsefulSubmissionType += report.dataWithUsefulSubmissionType;
+            dataSubmittedAfterSECReform += report.dataSubmittedAfterSECReform;
 
             amountSTier += report.amountSTier;
             amountATier += report.amountATier;
@@ -47,6 +57,15 @@ namespace Atratinus.DataTransform.Models
             if (report.InvalidFilingDate)
                 filesWithInvalidFilingDate.Add(fileName);
 
+            if (report.InvalidSubmissionType)
+                filesWithInvalidSubmissionType.Add(fileName);
+
+            if (report.UsefulSubmissionType)
+                dataWithUsefulSubmissionType++;
+
+            if (report.SubmittedAfterSECReform)
+                dataSubmittedAfterSECReform++;
+
             switch(report.Quality)
             {
                 case QualityLevel.S_TIER: amountSTier++; break;
@@ -63,6 +82,10 @@ namespace Atratinus.DataTransform.Models
             report += $"Quality report {DateTime.Now}";
             report += Environment.NewLine;
             report += $"Analyzed {amountEDGARFiles} EDGAR files";
+            report += Environment.NewLine;
+            report += $"Files that are not SC 13D: {amountEDGARFiles - dataWithUsefulSubmissionType} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataWithUsefulSubmissionType), amountEDGARFiles)}%)";
+            report += Environment.NewLine;
+            report += $"Files submitted before SEC reform: {amountEDGARFiles - dataSubmittedAfterSECReform} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataSubmittedAfterSECReform), amountEDGARFiles)}%)";
             report += Environment.NewLine;
             report += "------------------------------------";
             report += Environment.NewLine;
@@ -97,6 +120,13 @@ namespace Atratinus.DataTransform.Models
             {
                 var randMax = filesWithInvalidFilingDate.Count == 1 ? 1 : filesWithInvalidFilingDate.Count - 1;
                 report += $"Suggestion: Investigate file {Path.GetFileName(filesWithInvalidFilingDate.ElementAt(new Random().Next(0, randMax)))}";
+            }
+            report += Environment.NewLine;
+            report += $"Files with invalid submission type: {filesWithInvalidSubmissionType.Count} ({GetFormattedPercentageString(filesWithInvalidSubmissionType.Count, amountEDGARFiles)}%). ";
+            if (filesWithInvalidSubmissionType.Count > 0)
+            {
+                var randMax = filesWithInvalidSubmissionType.Count == 1 ? 1 : filesWithInvalidSubmissionType.Count - 1;
+                report += $"Suggestion: Investigate file {Path.GetFileName(filesWithInvalidSubmissionType.ElementAt(new Random().Next(0, randMax)))}";
             }
             report += Environment.NewLine;
 
