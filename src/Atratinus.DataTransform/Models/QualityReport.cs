@@ -12,5 +12,6 @@ namespace Atratinus.DataTransform.Models
         internal bool UsefulSubmissionType { get; set; }
         internal bool SubmittedAfterSECReform { get; set; }
         internal QualityLevel Quality { get; set; }
+        internal bool ShouldBeConsidered { get; set; }
     }
 }

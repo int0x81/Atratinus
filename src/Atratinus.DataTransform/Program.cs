@@ -105,10 +105,10 @@ namespace Atratinus.DataTransform
             for (int fileIndex = start; fileIndex < limit; fileIndex++)
             {
                 var analysis = AnalyzeFile(files[fileIndex], originAccessions, supervised, investors);
-                var fileReport = QualityGate.Measure(analysis.Investment);
+                var fileReport = QualityGate.Measure(analysis.Investment, config);
                 report.ConsiderQualityReport(files[fileIndex], fileReport);
 
-                if (!TakeInvestment(fileReport, config))
+                if (!fileReport.ShouldBeConsidered)
                     continue;
 
                 if (analysis.Supervised != null)
@@ -137,20 +137,6 @@ namespace Atratinus.DataTransform
             }
 
             return new FileAnalysisResult() { Investment = investmentActivity, Supervised = trainingDatum };
-        }
-
-        private static bool TakeInvestment(QualityReport report, AtratinusConfiguration config)
-        {
-            if (!config.TakeFilesBeforeSECReform && !report.SubmittedAfterSECReform)
-                return false;
-
-            if (report.Quality == QualityLevel.T_TIER)
-                return false;
-
-            if (!report.UsefulSubmissionType)
-                return false;
-
-            return true;
         }
         
         private static void AddFundAndFirmType(InvestmentActivity accession, InvestorHashTableSet investors)

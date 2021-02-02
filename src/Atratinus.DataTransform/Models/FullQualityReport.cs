@@ -18,6 +18,7 @@ namespace Atratinus.DataTransform.Models
 
         uint dataWithUsefulSubmissionType = 0;
         uint dataSubmittedAfterSECReform = 0;
+        uint dataToBeConsidered = 0;
 
         int amountSTier = 0;
 
@@ -38,6 +39,7 @@ namespace Atratinus.DataTransform.Models
 
             dataWithUsefulSubmissionType += report.dataWithUsefulSubmissionType;
             dataSubmittedAfterSECReform += report.dataSubmittedAfterSECReform;
+            dataToBeConsidered += report.dataToBeConsidered;
 
             amountSTier += report.amountSTier;
             amountATier += report.amountATier;
@@ -66,13 +68,19 @@ namespace Atratinus.DataTransform.Models
             if (report.SubmittedAfterSECReform)
                 dataSubmittedAfterSECReform++;
 
-            switch(report.Quality)
+            if (report.ShouldBeConsidered)
+                dataToBeConsidered++;
+
+            if(report.ShouldBeConsidered)
             {
-                case QualityLevel.S_TIER: amountSTier++; break;
-                case QualityLevel.A_TIER: amountATier++; break;
-                case QualityLevel.B_TIER: amountBTier++; break;
-                case QualityLevel.C_TIER: amountCTier++; break;
-                case QualityLevel.T_TIER: amountTTier++; break;
+                switch (report.Quality)
+                {
+                    case QualityLevel.S_TIER: amountSTier++; break;
+                    case QualityLevel.A_TIER: amountATier++; break;
+                    case QualityLevel.B_TIER: amountBTier++; break;
+                    case QualityLevel.C_TIER: amountCTier++; break;
+                    case QualityLevel.T_TIER: amountTTier++; break;
+                }
             }
         }
 
@@ -83,21 +91,21 @@ namespace Atratinus.DataTransform.Models
             report += Environment.NewLine;
             report += $"Analyzed {amountEDGARFiles} EDGAR files";
             report += Environment.NewLine;
-            report += $"Files that are not SC 13D: {amountEDGARFiles - dataWithUsefulSubmissionType} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataWithUsefulSubmissionType), amountEDGARFiles)}%)";
+            report += $"Files that are not SC 13D: {amountEDGARFiles - dataWithUsefulSubmissionType} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataWithUsefulSubmissionType), dataToBeConsidered)}%)";
             report += Environment.NewLine;
-            report += $"Files submitted before SEC reform: {amountEDGARFiles - dataSubmittedAfterSECReform} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataSubmittedAfterSECReform), amountEDGARFiles)}%)";
+            report += $"Files submitted before SEC reform: {amountEDGARFiles - dataSubmittedAfterSECReform} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataSubmittedAfterSECReform), dataToBeConsidered)}%)";
             report += Environment.NewLine;
             report += "------------------------------------";
             report += Environment.NewLine;
-            report += $"S-TIER data: {amountSTier} ({GetFormattedPercentageString(amountSTier, amountEDGARFiles)}%)";
+            report += $"S-TIER data: {amountSTier} ({GetFormattedPercentageString(amountSTier, dataToBeConsidered)}%)";
             report += Environment.NewLine;
-            report += $"A-TIER data: {amountATier} ({GetFormattedPercentageString(amountATier, amountEDGARFiles)}%)";
+            report += $"A-TIER data: {amountATier} ({GetFormattedPercentageString(amountATier, dataToBeConsidered)}%)";
             report += Environment.NewLine;
-            report += $"B-TIER data: {amountBTier} ({GetFormattedPercentageString(amountBTier, amountEDGARFiles)}%)";
+            report += $"B-TIER data: {amountBTier} ({GetFormattedPercentageString(amountBTier, dataToBeConsidered)}%)";
             report += Environment.NewLine;
-            report += $"C-TIER data: {amountCTier} ({GetFormattedPercentageString(amountCTier, amountEDGARFiles)}%)";
+            report += $"C-TIER data: {amountCTier} ({GetFormattedPercentageString(amountCTier, dataToBeConsidered)}%)";
             report += Environment.NewLine;
-            report += $"T-TIER data: {amountTTier} ({GetFormattedPercentageString(amountTTier, amountEDGARFiles)}%)";
+            report += $"T-TIER data: {amountTTier} ({GetFormattedPercentageString(amountTTier, dataToBeConsidered)}%)";
             report += Environment.NewLine;
             report += "------------------------------------";
             report += Environment.NewLine;

@@ -8,7 +8,7 @@ namespace Atratinus.DataTransform
 {
     static class QualityGate
     {
-        internal static QualityReport Measure(InvestmentActivity investment)
+        internal static QualityReport Measure(InvestmentActivity investment, AtratinusConfiguration config)
         {
             var report = new QualityReport();
             ushort badStates = 0;
@@ -67,30 +67,36 @@ namespace Atratinus.DataTransform
                 case 0:
                     {
                         investment.DataQualityLevel = QualityLevel.S_TIER.ToString();
+                        report.Quality = QualityLevel.S_TIER;
                         break;
                     }
                 case 1:
                     {
                         investment.DataQualityLevel = QualityLevel.A_TIER.ToString();
+                        report.Quality = QualityLevel.A_TIER;
                         break;
                     }
                 case 2:
                     {
                         investment.DataQualityLevel = QualityLevel.B_TIER.ToString();
+                        report.Quality = QualityLevel.B_TIER;
                         break;
                     }
                 case 3:
                     {
                         investment.DataQualityLevel = QualityLevel.C_TIER.ToString();
+                        report.Quality = QualityLevel.C_TIER;
                         break;
                     }
                 default:
                     {
                         investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
+                        report.Quality = QualityLevel.T_TIER;
                         break;
                     }
             }
 
+            report.ShouldBeConsidered = TakeInvestment(report, config);
             return report;
         }
 
@@ -109,6 +115,20 @@ namespace Atratinus.DataTransform
         {
             string pattern = "^[0-9]{8}$";
             return !string.IsNullOrEmpty(filingDate) && Regex.IsMatch(filingDate, pattern);
+        }
+
+        static bool TakeInvestment(QualityReport report, AtratinusConfiguration config)
+        {
+            if (!config.TakeFilesBeforeSECReform && !report.SubmittedAfterSECReform)
+                return false;
+
+            if (report.Quality == QualityLevel.T_TIER)
+                return false;
+
+            if (!report.UsefulSubmissionType)
+                return false;
+
+            return true;
         }
     }
 }
