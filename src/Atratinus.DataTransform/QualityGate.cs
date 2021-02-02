@@ -15,7 +15,7 @@ namespace Atratinus.DataTransform
 
             if(!IsAccesionNumberCorrect(investment.AccessionNumber))
             {
-                report.InvalidAccessionNumber = true;
+                report.Invalidations.Add("AccessionNumber");
                 report.Quality = QualityLevel.T_TIER;
                 investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
             }
@@ -23,7 +23,7 @@ namespace Atratinus.DataTransform
             if (!IsFilingDateCorrect(investment.FilingDate))
             {
                 badStates++;
-                report.InvalidFilingDate = true;
+                report.Invalidations.Add("FilingDate");
             }
             else
             {
@@ -40,19 +40,17 @@ namespace Atratinus.DataTransform
             if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
             {
                 badStates++;
-                report.InvalidPurposeOfTransaction = true;
+                report.Invalidations.Add("PurposeOfTransaction");
             }
 
             if(!investment.SubmissionType.HasValue)
             {
                 badStates++;
-                report.InvalidSubmissionType = true;
+                report.Invalidations.Add("SubmissionType");
                 report.UsefulSubmissionType = false;
             }
             else
             {
-                report.InvalidSubmissionType = false;
-
                 if (investment.SubmissionType.Value == Core.Enums.SubmissionType.SC_13D)
                     report.UsefulSubmissionType = true;
                 else

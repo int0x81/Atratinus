@@ -1,7 +1,5 @@
 ﻿using Atratinus.Core;
-using Atratinus.Core.Enums;
 using Atratinus.Core.Models;
-using Atratinus.DataTransform.Enums;
 using Atratinus.DataTransform.Models;
 using Serilog;
 using System;
@@ -27,23 +25,25 @@ namespace Atratinus.DataTransform
                 Directory.CreateDirectory(config.OutputFolder);
 
             var files = FileHelper.EnumerateEDGARFiles(config.EDGARFolder);
+            var cleaSet = FileHelper.ReadInCleaInvestmentActivitySet(config.CleaInvestmentActivitySet);
+            var filesToTake = MatchFiles(files, cleaSet);
             var amountVirtualCores = Environment.ProcessorCount;
             var tasks = new Task<FileAnalysisBatchResult>[amountVirtualCores];
             int sliceRange;
 
             if (tasks.Length == 1)
-                sliceRange = files.Length;
+                sliceRange = filesToTake.Count;
             else
-                sliceRange = files.Length / (tasks.Length - 1); //-1 because we need one task that will handle the modulus
+                sliceRange = filesToTake.Count / (tasks.Length - 1); //-1 because we need one task that will handle the modulus
 
-            if (files.Length == 0)
+            if (filesToTake.Count == 0)
                 return;
 
             var supervised = FileHelper.ReadInSupervised(config.SupervisedFile, config.EDGARFolder);
-            var cleasSet = FileHelper.ReadInCleaInvestmentActivitySet(config.CleaInvestmentActivitySet);
+            
             var investors = FileHelper.ReadInInvestorData(config.InvestorsFile);
 
-            if (cleasSet == null)
+            if (cleaSet == null)
                 return;
 
             Log.Information($"Utilizing {tasks.Length} threads for file analysis");
@@ -55,15 +55,31 @@ namespace Atratinus.DataTransform
                 var limit = c * sliceRange;
                 var taskNumber = c;
 
-                tasks[c] = Task.Run(() => AnalyzeSliceOfFiles(start, limit, files, cleasSet, supervised, investors, config));
+                tasks[c] = Task.Run(() => AnalyzeSliceOfFiles(start, limit, filesToTake, cleaSet, supervised, investors, config));
             }
 
-            tasks[0] = Task.Run(() => AnalyzeSliceOfFiles((tasks.Length - 1) * sliceRange, files.Length, files, cleasSet, supervised, investors, config));
+            tasks[0] = Task.Run(() => AnalyzeSliceOfFiles((tasks.Length - 1) * sliceRange, filesToTake.Count, filesToTake, cleaSet, supervised, investors, config));
 
-            FinalizeRun(tasks, config, Convert.ToUInt32(files.Length));
+            FinalizeRun(tasks, config, Convert.ToUInt32(filesToTake.Count));
 
             Log.Information($"Finished data tranformation: {DateTime.Now}");
             Log.Information($"You may close this window now...");
+        }
+
+        /// <summary>
+        /// Returns only the files that can also be found in cleas dataset
+        /// </summary>
+        private static IReadOnlyList<string> MatchFiles(string[] files, IReadOnlyDictionary<string, InvestmentActivity> cleaSet)
+        {
+            var result = new List<string>();
+
+            foreach (var file in files)
+            {
+                if (cleaSet.ContainsKey(Path.GetFileNameWithoutExtension(file)))
+                    result.Add(file);
+            }
+
+            return result.AsReadOnly();
         }
 
         private static void ConfigureSerilog()
@@ -95,7 +111,7 @@ namespace Atratinus.DataTransform
             }
         }
 
-        private static FileAnalysisBatchResult AnalyzeSliceOfFiles(int start, int limit, string[] files, IReadOnlyDictionary<string, InvestmentActivity> originAccessions, 
+        private static FileAnalysisBatchResult AnalyzeSliceOfFiles(int start, int limit, IReadOnlyList<string> files, IReadOnlyDictionary<string, InvestmentActivity> originAccessions, 
             IReadOnlyDictionary<string, int> supervised, InvestorHashTableSet investors, AtratinusConfiguration config)
         {
             IList<InvestmentActivity> investments = new List<InvestmentActivity>();

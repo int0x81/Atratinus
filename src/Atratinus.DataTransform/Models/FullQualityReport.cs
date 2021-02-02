@@ -8,13 +8,7 @@ namespace Atratinus.DataTransform.Models
 {
     public class FullQualityReport
     {
-        readonly List<string> filesWithInvalidAccessionNumber = new List<string>();
-
-        readonly List<string> filesWithInvalidPurposeOfTransaction = new List<string>();
-
-        readonly List<string> filesWithInvalidFilingDate = new List<string>();
-
-        readonly List<string> filesWithInvalidSubmissionType = new List<string>();
+        readonly Dictionary<string, List<string>> invalidationCollections = new Dictionary<string, List<string>>();
 
         uint dataWithUsefulSubmissionType = 0;
         uint dataSubmittedAfterSECReform = 0;
@@ -32,10 +26,13 @@ namespace Atratinus.DataTransform.Models
 
         internal void Merge(FullQualityReport report)
         {
-            filesWithInvalidAccessionNumber.AddRange(report.filesWithInvalidAccessionNumber);
-            filesWithInvalidPurposeOfTransaction.AddRange(report.filesWithInvalidPurposeOfTransaction);
-            filesWithInvalidFilingDate.AddRange(report.filesWithInvalidFilingDate);
-            filesWithInvalidSubmissionType.AddRange(report.filesWithInvalidAccessionNumber);
+            foreach(var invalidationCollection in report.invalidationCollections)
+            {
+                if (invalidationCollections.TryGetValue(invalidationCollection.Key, out var collection))
+                    collection.AddRange(invalidationCollection.Value);
+                else
+                    invalidationCollections.Add(invalidationCollection.Key, invalidationCollection.Value);
+            }
 
             dataWithUsefulSubmissionType += report.dataWithUsefulSubmissionType;
             dataSubmittedAfterSECReform += report.dataSubmittedAfterSECReform;
@@ -50,17 +47,19 @@ namespace Atratinus.DataTransform.Models
 
         internal void ConsiderQualityReport(string fileName, QualityReport report)
         {
-            if (report.InvalidAccessionNumber)
-                filesWithInvalidAccessionNumber.Add(fileName);
-
-            if (report.InvalidPurposeOfTransaction)
-                filesWithInvalidPurposeOfTransaction.Add(fileName);
-
-            if (report.InvalidFilingDate)
-                filesWithInvalidFilingDate.Add(fileName);
-
-            if (report.InvalidSubmissionType)
-                filesWithInvalidSubmissionType.Add(fileName);
+            foreach(var invalidation in report.Invalidations)
+            {
+                if(invalidationCollections.TryGetValue(invalidation, out var collection))
+                    collection.Add(fileName);
+                else
+                {
+                    var newCollection = new List<string>
+                    {
+                        fileName
+                    };
+                    invalidationCollections.Add(invalidation, newCollection);
+                }
+            }
 
             if (report.UsefulSubmissionType)
                 dataWithUsefulSubmissionType++;
@@ -68,11 +67,9 @@ namespace Atratinus.DataTransform.Models
             if (report.SubmittedAfterSECReform)
                 dataSubmittedAfterSECReform++;
 
-            if (report.ShouldBeConsidered)
-                dataToBeConsidered++;
-
             if(report.ShouldBeConsidered)
             {
+                dataToBeConsidered++;
                 switch (report.Quality)
                 {
                     case QualityLevel.S_TIER: amountSTier++; break;
@@ -109,38 +106,26 @@ namespace Atratinus.DataTransform.Models
             report += Environment.NewLine;
             report += "------------------------------------";
             report += Environment.NewLine;
-            report += $"Files with invalid accession number: {filesWithInvalidAccessionNumber.Count} ({GetFormattedPercentageString(filesWithInvalidAccessionNumber.Count, amountEDGARFiles)}%). ";
-            if(filesWithInvalidAccessionNumber.Count > 0)
-            {
-                var randMax = filesWithInvalidAccessionNumber.Count == 1 ? 1 : filesWithInvalidAccessionNumber.Count - 1;
-                report += $"Suggestion: Investigate file {Path.GetFileName(filesWithInvalidAccessionNumber.ElementAt(new Random().Next(0, randMax)))}";
-            }
-            report += Environment.NewLine;
-            report += $"Files with invalid purpose of transaction: {filesWithInvalidPurposeOfTransaction.Count} ({GetFormattedPercentageString(filesWithInvalidPurposeOfTransaction.Count, amountEDGARFiles)}%). ";
-            if(filesWithInvalidPurposeOfTransaction.Count > 0)
-            {
-                var randMax = filesWithInvalidPurposeOfTransaction.Count == 1 ? 1 : filesWithInvalidPurposeOfTransaction.Count - 1;
-                report += $"Suggestion: Investigate file {Path.GetFileName(filesWithInvalidPurposeOfTransaction.ElementAt(new Random().Next(0, randMax)))}";
-            }
-            report += Environment.NewLine;
-            report += $"Files with invalid filed date: {filesWithInvalidFilingDate.Count} ({GetFormattedPercentageString(filesWithInvalidFilingDate.Count, amountEDGARFiles)}%). ";
-            if(filesWithInvalidFilingDate.Count > 0)
-            {
-                var randMax = filesWithInvalidFilingDate.Count == 1 ? 1 : filesWithInvalidFilingDate.Count - 1;
-                report += $"Suggestion: Investigate file {Path.GetFileName(filesWithInvalidFilingDate.ElementAt(new Random().Next(0, randMax)))}";
-            }
-            report += Environment.NewLine;
-            report += $"Files with invalid submission type: {filesWithInvalidSubmissionType.Count} ({GetFormattedPercentageString(filesWithInvalidSubmissionType.Count, amountEDGARFiles)}%). ";
-            if (filesWithInvalidSubmissionType.Count > 0)
-            {
-                var randMax = filesWithInvalidSubmissionType.Count == 1 ? 1 : filesWithInvalidSubmissionType.Count - 1;
-                report += $"Suggestion: Investigate file {Path.GetFileName(filesWithInvalidSubmissionType.ElementAt(new Random().Next(0, randMax)))}";
-            }
-            report += Environment.NewLine;
+            foreach (var invalidation in invalidationCollections)
+                report += BuildInvalidationSection(invalidation.Key,invalidation.Value, amountEDGARFiles);
 
             string path = Path.Combine(folderPath, "qualityReport.txt");
 
             File.WriteAllText(path, report);
+        }
+
+        static string BuildInvalidationSection(string invalidationName, IEnumerable<string> invalidations, uint amountEDGARFiles)
+        {
+            var section = "";
+            var amountOfInvalidations = invalidations.Count();
+            section += $"Files with invalid field {invalidationName}: {amountOfInvalidations} ({GetFormattedPercentageString(amountOfInvalidations, amountEDGARFiles)}%). ";
+            if (invalidations.Any())
+            {
+                var randMax = amountOfInvalidations == 1 ? 1 : amountOfInvalidations - 1;
+                section += $"Suggestion: Investigate file {Path.GetFileName(invalidations.ElementAt(new Random().Next(0, randMax)))}";
+            }
+            section += Environment.NewLine;
+            return section;
         }
 
         static string GetFormattedPercentageString(int dividend, uint divisor)
