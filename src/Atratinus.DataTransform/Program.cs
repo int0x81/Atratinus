@@ -25,8 +25,8 @@ namespace Atratinus.DataTransform
                 Directory.CreateDirectory(config.OutputFolder);
 
             var files = FileHelper.EnumerateEDGARFiles(config.EDGARFolder);
-            var cleaSet = FileHelper.ReadInCleaInvestmentActivitySet(config.CleaInvestmentActivitySet);
-            var filesToTake = MatchFiles(files, cleaSet);
+            var alteryxResult = FileHelper.ReadInAlteryxData(config.CleaInvestmentActivitySet);
+            var filesToTake = MatchFiles(files, alteryxResult.InvestmentActivities);
             var amountVirtualCores = Environment.ProcessorCount;
             var tasks = new Task<FileAnalysisBatchResult>[amountVirtualCores];
             int sliceRange;
@@ -43,7 +43,7 @@ namespace Atratinus.DataTransform
             
             var investors = FileHelper.ReadInInvestorData(config.InvestorsFile);
 
-            if (cleaSet == null)
+            if (alteryxResult == null)
                 return;
 
             Log.Information($"Utilizing {tasks.Length} threads for file analysis");
@@ -55,12 +55,12 @@ namespace Atratinus.DataTransform
                 var limit = c * sliceRange;
                 var taskNumber = c;
 
-                tasks[c] = Task.Run(() => AnalyzeSliceOfFiles(start, limit, filesToTake, cleaSet, supervised, investors, config));
+                tasks[c] = Task.Run(() => AnalyzeSliceOfFiles(start, limit, filesToTake, alteryxResult.InvestmentActivities, supervised, investors, config));
             }
 
-            tasks[0] = Task.Run(() => AnalyzeSliceOfFiles((tasks.Length - 1) * sliceRange, filesToTake.Count, filesToTake, cleaSet, supervised, investors, config));
+            tasks[0] = Task.Run(() => AnalyzeSliceOfFiles((tasks.Length - 1) * sliceRange, filesToTake.Count, filesToTake, alteryxResult.InvestmentActivities, supervised, investors, config));
 
-            FinalizeRun(tasks, config, Convert.ToUInt32(filesToTake.Count));
+            FinalizeRun(tasks, config, Convert.ToUInt32(files.Length), Convert.ToUInt32(filesToTake.Count), alteryxResult);
 
             Log.Information($"Finished data tranformation: {DateTime.Now}");
             Log.Information($"You may close this window now...");
@@ -147,7 +147,7 @@ namespace Atratinus.DataTransform
 
             if (supervised.TryGetValue(investmentActivity.AccessionNumber, out var typeId))
             {
-                trainingDatum = new Supervised(investmentActivity.AccessionNumber, investmentActivity.PurposeOfTransaction, typeId);
+                trainingDatum = new Supervised(investmentActivity.AccessionNumber, investmentActivity.PurposeOfTransaction, typeId, investmentActivity.TypeOfReportingPerson);
                 investmentActivity.PurposeAnalyzedByML = false;
                 investmentActivity.PurposeOfTransactionTypeId = typeId;
             }
@@ -179,7 +179,7 @@ namespace Atratinus.DataTransform
             }
         }
 
-        private static void FinalizeRun(Task<FileAnalysisBatchResult>[] tasks, AtratinusConfiguration config, uint amountFiles)
+        private static void FinalizeRun(Task<FileAnalysisBatchResult>[] tasks, AtratinusConfiguration config, uint enumeratedFiles, uint amountFiles, AlteryxResult alteryxResult)
         {
             Task.WaitAll(tasks);
 
@@ -196,7 +196,7 @@ namespace Atratinus.DataTransform
 
             Helper.SaveAccessionsAsCSV(investments, config.OutputFolder, false);
             FileHelper.SaveTrainingData(trainingData, config.OutputFolder);
-            report.BuildAndSaveReport(config.OutputFolder, amountFiles);
+            report.BuildAndSaveReport(config.OutputFolder, enumeratedFiles, amountFiles, alteryxResult);
         }
     }
 }

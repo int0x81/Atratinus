@@ -63,7 +63,7 @@ namespace Atratinus.ResultSetBuilder
 
         private static PurposePrediction GetLocalModelPrediction(string purposeOfIntervention)
         {
-            Supervised purpose = new Supervised() { PurposeOfIntervention = purposeOfIntervention };
+            Supervised purpose = new Supervised() { PurposeOfTransaction = purposeOfIntervention };
 
             var prediction = predictionEngine.Predict(purpose);
 

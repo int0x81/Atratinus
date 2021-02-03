@@ -20,5 +20,29 @@ namespace Atratinus.DataTransform
             else
                 return SubmissionType.OTHER;
         }
+
+        internal static TypeOfReportingPerson? TransformTypeOfReportingPerson(string input)
+        {
+            if (string.IsNullOrEmpty(input) || input.Length != 2)
+                return null;
+
+            return (input.ToUpper()) switch
+            {
+                "BD" => TypeOfReportingPerson.BROKER_DEALER,
+                "BK" => TypeOfReportingPerson.BANK,
+                "IC" => TypeOfReportingPerson.INCURANCE_COMPANY,
+                "IV" => TypeOfReportingPerson.INVESTMENT_COMPANY,
+                "IA" => TypeOfReportingPerson.INVESTMENT_ADVISOR,
+                "EP" => TypeOfReportingPerson.EMPLOYEE_BENEFIT_PLAN_OR_ENDOWMENT_FUND,
+                "HC" => TypeOfReportingPerson.PARENT_HOLDING_COMPANY_CONTROL_PERSON,
+                "SA" => TypeOfReportingPerson.SAVINGS_ASSOCIATION,
+                "CP" => TypeOfReportingPerson.CHURCH_PLAN,
+                "CO" => TypeOfReportingPerson.CORPERATION,
+                "PN" => TypeOfReportingPerson.PARTNERSHIP,
+                "IN" => TypeOfReportingPerson.INDIVIDUAL,
+                "OO" => TypeOfReportingPerson.OTHER,
+                _ => null,
+            };
+        }
     }
 }

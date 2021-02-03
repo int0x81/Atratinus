@@ -37,14 +37,10 @@ namespace Atratinus.DataTransform
             return files;
         }
 
-        /// <summary>
-        /// Reads in the investment activities that was provides by Clea as csv file.
-        /// </summary>
-        /// <param name="filePath">The path to the csv file.</param>
-        /// <returns>A dictionary with all red in investments with the accession number as key.</returns>
-        internal static IReadOnlyDictionary<string, InvestmentActivity> ReadInCleaInvestmentActivitySet(string filePath)
+        internal static AlteryxResult ReadInAlteryxData(string filePath)
         {
             var investments = new Dictionary<string, InvestmentActivity>();
+            var invalidEntries = new List<string>();
 
             StreamReader reader;
 
@@ -71,18 +67,18 @@ namespace Atratinus.DataTransform
             };
 
             using var csv = new CsvReader(reader, config);
-            csv.Context.RegisterClassMap<CleaInvestmentActivityMap>();
+            csv.Context.RegisterClassMap<AlteryxResultMap>();
 
             var records = csv.GetRecords<InvestmentActivity>();
-            
+
             foreach (var record in records)
             {
                 if (record.AccessionNumber.Length != 20) //SAFETFY MEASUREMENT: some accessions numbers in origin data set are invalid
-                    continue;
-
-                investments.TryAdd(record.AccessionNumber, record);
+                    invalidEntries.Add(record.AccessionNumber);
+                else
+                    investments.TryAdd(record.AccessionNumber, record);
             }
-            return investments;
+            return new AlteryxResult { InvestmentActivities = investments, DataWithInvalidAccessionNumber = invalidEntries };
         }
 
         /// <summary>

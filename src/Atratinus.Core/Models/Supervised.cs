@@ -1,15 +1,21 @@
-﻿namespace Atratinus.Core.Models
+﻿using Atratinus.Core.Enums;
+
+namespace Atratinus.Core.Models
 {
     public class Supervised : SupervisedMeta
     {
         public Supervised() { }
-        public Supervised(string accessionNumber, string purposeOfIntervention, int interventionType)
+
+        public Supervised(string accessionNumber, string purposeOfTransaction, int transactionTypeId, TypeOfReportingPerson? typeOfReportingPerson)
         {
             AccessionNumber = accessionNumber;
-            PurposeOfIntervention = purposeOfIntervention;
-            PurposeOfTransactionTypeId = interventionType;
+            PurposeOfTransactionTypeId = transactionTypeId;
+            PurposeOfTransaction = purposeOfTransaction;
+            TypeOfReportingPerson = typeOfReportingPerson;
         }
 
-        public string PurposeOfIntervention { get; set; }
+        public string PurposeOfTransaction { get; init; }
+
+        public TypeOfReportingPerson? TypeOfReportingPerson { get; init; }
     }
 }

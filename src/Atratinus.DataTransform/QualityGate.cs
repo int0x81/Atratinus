@@ -1,6 +1,5 @@
 ﻿using Atratinus.Core.Models;
 using Atratinus.DataTransform.Enums;
-using System.Text.RegularExpressions;
 using Atratinus.DataTransform.Models;
 using System;
 
@@ -13,14 +12,14 @@ namespace Atratinus.DataTransform
             var report = new QualityReport();
             ushort badStates = 0;
 
-            if(!IsAccesionNumberCorrect(investment.AccessionNumber))
+            if(!DataValidators.IsValidAccessionNumber(investment.AccessionNumber))
             {
                 report.Invalidations.Add("AccessionNumber");
                 report.Quality = QualityLevel.T_TIER;
                 investment.DataQualityLevel = QualityLevel.T_TIER.ToString();
             }
 
-            if (!IsFilingDateCorrect(investment.FilingDate))
+            if (!DataValidators.IsValidFilingDate(investment.FilingDate))
             {
                 badStates++;
                 report.Invalidations.Add("FilingDate");
@@ -37,7 +36,7 @@ namespace Atratinus.DataTransform
                     report.SubmittedAfterSECReform = true;
             }
 
-            if (!IsPurposeOfTransactionCorrect(investment.PurposeOfTransaction))
+            if (!DataValidators.IsValidPurposeOfTransaction(investment.PurposeOfTransaction))
             {
                 badStates++;
                 report.Invalidations.Add("PurposeOfTransaction");
@@ -98,22 +97,7 @@ namespace Atratinus.DataTransform
             return report;
         }
 
-        private static bool IsAccesionNumberCorrect(string accessionNumber)
-        {
-            string pattern = @"^[0-9]{10}-[0-9]{2}-[0-9]{6}$";
-            return !string.IsNullOrEmpty(accessionNumber) && Regex.IsMatch(accessionNumber, pattern);
-        }
-
-        static bool IsPurposeOfTransactionCorrect(string purpose)
-        {
-            return !string.IsNullOrEmpty(purpose);
-        }
-
-        static bool IsFilingDateCorrect(string filingDate)
-        {
-            string pattern = "^[0-9]{8}$";
-            return !string.IsNullOrEmpty(filingDate) && Regex.IsMatch(filingDate, pattern);
-        }
+        
 
         static bool TakeInvestment(QualityReport report, AtratinusConfiguration config)
         {

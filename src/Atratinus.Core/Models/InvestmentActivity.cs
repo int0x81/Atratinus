@@ -50,13 +50,13 @@ namespace Atratinus.Core.Models
 
         public string Source { get; set; }
 
+        public TypeOfReportingPerson? TypeOfReportingPerson { get; set; }
+
         public string ActivistInvestorId { get; set; }
 
         public string ActivistInvestorFirmType { get; set; }
 
         public string ActivistInvestorFundType { get; set; }
-
-        public string TypeOfReportingPerson { get; set; }
 
         public string PurposeOfTransaction { get; set; }
 
@@ -65,12 +65,6 @@ namespace Atratinus.Core.Models
         public string PurposeOfTransactionType { get; set; }
 
         public bool PurposeAnalyzedByML { get; set; }
-
-        /// <summary>
-        /// States, if the original SC 13D Filing was realigned by an
-        /// SC 13D/A.
-        /// </summary>
-        public bool Realigned { get; set; }
 
         /// <summary>
         /// Meta data that states the quality of this datum.

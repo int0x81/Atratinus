@@ -3,9 +3,9 @@ using CsvHelper.Configuration;
 
 namespace Atratinus.DataTransform.Models.Maps
 {
-    public class CleaInvestmentActivityMap : ClassMap<InvestmentActivity>
+    public class AlteryxResultMap : ClassMap<InvestmentActivity>
     {
-        public CleaInvestmentActivityMap()
+        public AlteryxResultMap()
         {
             Map(a => a.AccessionNumber).Name("ACCESSION_NUMBER");
             Map(a => a.ActivistInvestorCIK).Name("ACTIVIST_INVESTOR_CIK");
@@ -30,7 +30,7 @@ namespace Atratinus.DataTransform.Models.Maps
             Map(a => a.SubjectCompanySIC).Name("SUBJECT_COMPANY_SIC");
             Map(a => a.SubjectCompanyStateOfIncorporation).Name("SUBJECT_COMPANY_STATE_OF_INCORPORATION");
             Map(a => a.SubmissionType).Convert(row => DataTransformers.TransformSubmissionType(row.GetField("SUBMISSION_TYPE")));
-            Map(a => a.TypeOfReportingPerson).Name("TYPE_OF_REPORTING_PERSON");
+            Map(a => a.TypeOfReportingPerson).Convert(row => DataTransformers.TransformTypeOfReportingPerson(row.GetField("TYPE_OF_REPORTING_PERSON")));
         }
     }
 }

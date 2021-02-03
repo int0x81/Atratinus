@@ -81,13 +81,25 @@ namespace Atratinus.DataTransform.Models
             }
         }
 
-        internal void BuildAndSaveReport(string folderPath, uint amountEDGARFiles)
+        internal void BuildAndSaveReport(string folderPath, uint enumeratedFiles, uint amountEDGARFiles, AlteryxResult alteryxResult)
         {
             string report = "";
             report += $"Quality report {DateTime.Now}";
             report += Environment.NewLine;
-            report += $"Analyzed {amountEDGARFiles} EDGAR files";
+            report += $"Analyzed {enumeratedFiles} EDGAR files";
             report += Environment.NewLine;
+            if (alteryxResult.DataWithInvalidAccessionNumber.Count > 0)
+            {
+                var amount = alteryxResult.DataWithInvalidAccessionNumber.Count;
+                report += $"Data in the Alteryx set with an invalid accession number: {amount}";
+                report += Environment.NewLine;
+            }
+            if (enumeratedFiles - amountEDGARFiles > 0)
+            {
+                var diff = enumeratedFiles - amountEDGARFiles;
+                report += $"{diff} file{(diff == 1 ? string.Empty : 's')} could not be matched with a datum in the Alteryx data set";
+                report += Environment.NewLine;
+            }
             report += $"Files that are not SC 13D: {amountEDGARFiles - dataWithUsefulSubmissionType} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataWithUsefulSubmissionType), dataToBeConsidered)}%)";
             report += Environment.NewLine;
             report += $"Files submitted before SEC reform: {amountEDGARFiles - dataSubmittedAfterSECReform} ({GetFormattedPercentageString((int)(amountEDGARFiles - dataSubmittedAfterSECReform), dataToBeConsidered)}%)";
