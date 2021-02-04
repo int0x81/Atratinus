@@ -124,6 +124,10 @@ namespace Atratinus.DataTransform
             {
                 Log.Warning("Unable to load supervised data. The file was not in correct JSON format.");
             }
+            catch(Exception)
+            {
+                Log.Warning("Unable to load supervised data.");
+            }
 
             foreach (var datum in supervised)
             {
