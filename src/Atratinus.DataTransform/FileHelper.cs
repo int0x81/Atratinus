@@ -73,7 +73,7 @@ namespace Atratinus.DataTransform
 
             foreach (var record in records)
             {
-                if (record.AccessionNumber.Length != 20) //SAFETFY MEASUREMENT: some accessions numbers in origin data set are invalid
+                if (!DataValidators.IsValidAccessionNumber(record.AccessionNumber))
                     invalidEntries.Add(record.AccessionNumber);
                 else
                     investments.TryAdd(record.AccessionNumber, record);
@@ -146,7 +146,32 @@ namespace Atratinus.DataTransform
 
             string path = Path.Combine(folderPath, "trainingData.json");
 
-            File.WriteAllText(path, json);
+            try
+            {
+                File.WriteAllText(path, json);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Unable to save training data in {folderPath}. Error message was: {ex.Message}");
+            }
         } 
+
+        internal static bool TryCreateDirectory(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                try
+                {
+                    Directory.CreateDirectory(path);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Unable to create output directory. Error Message: {ex.Message}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

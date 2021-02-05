@@ -21,8 +21,8 @@ namespace Atratinus.DataTransform
             if (config == null)
                 return;
 
-            if (!Directory.Exists(config.OutputFolder))
-                Directory.CreateDirectory(config.OutputFolder);
+            if (!FileHelper.TryCreateDirectory(config.OutputFolder))
+                return;
 
             var files = FileHelper.EnumerateEDGARFiles(config.EDGARFolder);
             var alteryxResult = FileHelper.ReadInAlteryxData(config.CleaInvestmentActivitySet);
@@ -69,13 +69,13 @@ namespace Atratinus.DataTransform
         /// <summary>
         /// Returns only the files that can also be found in cleas dataset
         /// </summary>
-        private static IReadOnlyList<string> MatchFiles(string[] files, IReadOnlyDictionary<string, InvestmentActivity> cleaSet)
+        private static IReadOnlyList<string> MatchFiles(string[] files, IReadOnlyDictionary<string, InvestmentActivity> alteryxSet)
         {
             var result = new List<string>();
 
             foreach (var file in files)
             {
-                if (cleaSet.ContainsKey(Path.GetFileNameWithoutExtension(file)))
+                if (alteryxSet.ContainsKey(Path.GetFileNameWithoutExtension(file)))
                     result.Add(file);
             }
 
@@ -136,12 +136,12 @@ namespace Atratinus.DataTransform
             return new FileAnalysisBatchResult() { Accessions = investments, TrainingData = trainingData, QualityReport = report };
         }
 
-        private static FileAnalysisResult AnalyzeFile(string file, IReadOnlyDictionary<string, InvestmentActivity> cleaInvestmentSet, 
+        private static FileAnalysisResult AnalyzeFile(string file, IReadOnlyDictionary<string, InvestmentActivity> alteryxInvestmentSet, 
             IReadOnlyDictionary<string, int> supervised, InvestorHashTableSet investors)
         {
             InvestmentActivity investmentActivity = EdgarAnalyzer.Analyze(file);
             Supervised trainingDatum = null;
-            Helper.MergeAccession(investmentActivity, cleaInvestmentSet);
+            Helper.MergeAccession(investmentActivity, alteryxInvestmentSet);
 
             AddFundAndFirmType(investmentActivity, investors);
 
