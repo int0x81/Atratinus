@@ -42,6 +42,12 @@ namespace Atratinus.DataTransform
                 report.Invalidations.Add("PurposeOfTransaction");
             }
 
+            if(!DataValidators.IsValidTypeOfReportingPerson(investment.TypeOfReportingPerson))
+            {
+                badStates++;
+                report.Invalidations.Add("TypeOfReportingPerson");
+            }
+
             if(!investment.SubmissionType.HasValue)
             {
                 badStates++;

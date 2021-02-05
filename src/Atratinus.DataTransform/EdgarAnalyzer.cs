@@ -1,4 +1,5 @@
 ﻿using Atratinus.Core.Models;
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -112,7 +113,14 @@ namespace Atratinus.DataTransform
         {
             string beautiful = ReplaceNoBreakSpaces(ugly);
             beautiful = ShrinkWhitespace(beautiful);
+            beautiful = ReplaceNewLines(beautiful);
             return beautiful;
+        }
+
+        static string ReplaceNewLines(string ugly)
+        {
+            string pattern = @"\\n";
+            return Regex.Replace(ugly, pattern, " ").Replace(@"\n", " ").Replace(Environment.NewLine, " ");
         }
 
         static string ReplaceNoBreakSpaces(string ugly)

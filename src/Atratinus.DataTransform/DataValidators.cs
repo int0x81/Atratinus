@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using Atratinus.Core.Enums;
+using System.Text.RegularExpressions;
 
 namespace Atratinus.DataTransform
 {
@@ -19,6 +20,11 @@ namespace Atratinus.DataTransform
         {
             string pattern = "^[0-9]{8}$";
             return !string.IsNullOrEmpty(text) && Regex.IsMatch(text, pattern);
+        }
+
+        internal static bool IsValidTypeOfReportingPerson(TypeOfReportingPerson? type)
+        {
+            return type.HasValue;
         }
     }
 }

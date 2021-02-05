@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 
 namespace Atratinus.DataTransform
@@ -142,13 +143,19 @@ namespace Atratinus.DataTransform
 
         internal static void SaveTrainingData(IList<Supervised> trainingData, string folderPath)
         {
-            string json = JsonSerializer.Serialize(trainingData);
+            string jsonLines = "";
 
-            string path = Path.Combine(folderPath, "trainingData.json");
+            foreach(var datum in trainingData)
+            {
+                jsonLines += JsonSerializer.Serialize(datum).Replace(Environment.NewLine, "");
+                jsonLines += Environment.NewLine;
+            }
+
+            string path = Path.Combine(folderPath, "trainingData.jsonl");
 
             try
             {
-                File.WriteAllText(path, json);
+                File.WriteAllText(path, jsonLines);
             }
             catch (Exception ex)
             {
