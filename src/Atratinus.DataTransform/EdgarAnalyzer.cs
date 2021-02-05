@@ -8,8 +8,8 @@ namespace Atratinus.DataTransform
     class EdgarAnalyzer
     {
         const string ITEM_PATTERN = @"^\s*(Item|item|ITEM)";
-        const string ITEM_04_HEADER_PATTERN = @"(Item|item|ITEM)\s+4[.]?\s+(Purpose|PURPOSE|purpose)\s+(Of|OF|of)\s+((The|THE|the)\s+)?(Transaction|TRANSACTION|transaction)[.]?";
-        const string ITEM_05_HEADER_PATTERN = @"(Item|item|ITEM)\s+5[.]?\s+(Interest|INTEREST|interest)";
+        const string ITEM_04_HEADER_PATTERN = @"(Item|item|ITEM)\s+4([.]|[:])?\s+(Purpose|PURPOSE|purpose)\s+(Of|OF|of)\s+((The|THE|the)\s+)?(Transaction|TRANSACTION|transaction)[.]?";
+        const string ITEM_05_HEADER_PATTERN = @"(Item|item|ITEM)\s+5([.]|[:])?\s+(Interest|INTEREST|interest)";
 
         internal static InvestmentActivity Analyze(string file)
         {
